@@ -1,0 +1,25 @@
+{
+  "name": "matcaps",
+  "version": "1.0.0",
+  "description": "Huge library of matcap PNG textures organized by color",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nidorx/matcaps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nidorx/matcaps/issues"
+  },
+  "homepage": "https://github.com/nidorx/matcaps#readme",
+  "dependencies": {
+    "@jimp/plugin-circle": "^0.8.5",
+    "jimp": "^0.8.5",
+    "node-vibrant": "^3.1.4"
+  }
+}
