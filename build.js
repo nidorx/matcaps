@@ -3,6 +3,8 @@ const path = require('path');
 const chalk = require('chalk');
 const rimraf = require("rimraf");
 
+const JSZip = require('jszip');
+
 const child_process = require('child_process');
 const spawn = require('child_process').spawn;
 
@@ -81,6 +83,7 @@ var REG_FILE_NAME_COLORS = /^([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]
  * @constructor
  */
 function File(name) {
+
     this.name = name;
     var idx = LOG_IDX++;
     var color = COLORS[idx % COLORS.length];
@@ -103,10 +106,6 @@ function File(name) {
             console.warn.apply(undefined, parts);
         }.bind(this)
     };
-
-    // this.LOG.info('Teste de color asdf');
-    // this.LOG.warn('Teste de color asdf');
-    // this.LOG.error('Teste de color asdf');
 }
 
 /**
@@ -134,6 +133,21 @@ File.prototype.delete = function () {
  * @returns {Promise<any>}
  */
 File.prototype.process = function () {
+    return this.processExtension()
+        .then(this.validateDimension.bind(this))
+        .then(this.proccessPalette.bind(this))
+        .then(this.createPaletteCube.bind(this))
+        .then(this.render.bind(this))
+        .then(this.zip.bind(this))
+        ;
+};
+
+/**
+ * Initialize file proccess
+ *
+ * @returns {Promise<any>}
+ */
+File.prototype.processExtension = function () {
     return new Promise((resolve, reject) => {
 
         // Get this file extension
@@ -163,8 +177,6 @@ File.prototype.process = function () {
                             // Remove original
                             fs.unlinkSync(original);
                             this.name = path.basename(renamed);
-
-                            return this.validateDimension();
                         })
                         .then(resolve)
                         .catch(reject);
@@ -176,16 +188,12 @@ File.prototype.process = function () {
                     fs.unlinkSync(original);
                     this.name = path.basename(renamed);
 
-                    this.validateDimension()
-                        .then(resolve)
-                        .catch(reject);
+                    resolve();
                 }
 
                 break;
             case '.png':
-                return this.validateDimension()
-                    .then(resolve)
-                    .catch(reject);
+                resolve();
                 break;
             default:
                 // Remove invalid extension
@@ -208,7 +216,7 @@ File.prototype.validateDimension = function () {
 
             if (width === 1024 && height === 1024) {
                 // Ok
-                return this.proccessPalette();
+                return;
             }
 
             if (width < 1024 || height < 1024) {
@@ -225,10 +233,7 @@ File.prototype.validateDimension = function () {
 
             return image
                 .resize(1024, 1024)
-                .writeAsync(filepath)
-                .then(() => {
-                    return this.proccessPalette();
-                });
+                .writeAsync(filepath);
         });
 };
 
@@ -251,9 +256,7 @@ File.prototype.proccessPalette = function () {
                     DarkMuted: parts[6]
                 };
 
-                return this.createPaletteCube()
-                    .then(resolve)
-                    .catch(reject);
+                return resolve();
             }
 
             // Gera a paleta a partir da imagem original, e renomeia o arquivo atual
@@ -270,7 +273,6 @@ File.prototype.proccessPalette = function () {
                     return Vibrant.from(circular).getPalette();
                 })
                 .then(palette => {
-
 
                     // Get name from palette
                     // Ex. C65646_B36458_EC8C83_841D14_6A1B17_753B3C
@@ -344,9 +346,7 @@ File.prototype.createPaletteCube = function () {
         const paletteFile = path.join('palette', this.name);
         fs.exists(paletteFile, (exists) => {
             if (exists) {
-                return this.render()
-                    .then(resolve)
-                    .catch(reject);
+                return resolve();
             }
 
             const colors = {
@@ -384,9 +384,6 @@ File.prototype.createPaletteCube = function () {
                 }
 
                 image.writeAsync(paletteFile)
-                    .then(() => {
-                        return this.render();
-                    })
                     .then(resolve)
                     .catch(reject);
             });
@@ -468,6 +465,45 @@ File.prototype.render = function () {
                 resolve();
             });
         });
+    });
+};
+
+File.prototype.zip = function () {
+    return new Promise((resolve, reject) => {
+        let basename = path.basename(this.name, '.png');
+        const zippath = path.join('zip', basename + '.zip');
+        if (fs.existsSync(zippath)) {
+            return resolve();
+        }
+
+        var zip = new JSZip();
+
+        [
+            {folder: '64', ext: '.png'},
+            {folder: '128', ext: '.png'},
+            {folder: '256', ext: '.png'},
+            {folder: '512', ext: '.png'},
+            {folder: '1024', ext: '.png'},
+            {folder: 'palette', ext: '.png'},
+            {folder: 'preview', ext: '.jpg'},
+            {folder: 'zmt', ext: '.zmt'},
+        ].forEach(item => {
+            let folder = item.folder;
+            let ext = item.ext;
+            let filename = basename + ext;
+
+            const filepath = path.join(folder, filename);
+            if (fs.existsSync(filepath)) {
+                var zfolder = zip.folder(folder);
+                zfolder.file(filename, fs.createReadStream(filepath));
+            }
+        });
+
+        // Save zip content
+        zip.generateNodeStream({type: 'nodebuffer', streamFiles: true})
+            .pipe(fs.createWriteStream(zippath))
+            .on('error', reject)
+            .on('finish', resolve);
     });
 };
 
