@@ -341,7 +341,7 @@ File.prototype.proccessPalette = function () {
 File.prototype.createPaletteCube = function () {
     return new Promise((resolve, reject) => {
         // palette
-        const paletteFile = path.join('palette', this.name + '.png');
+        const paletteFile = path.join('palette', this.name);
         fs.exists(paletteFile, (exists) => {
             if (exists) {
                 return this.render()
@@ -401,18 +401,18 @@ File.prototype.render = function () {
     // Limit number of render
     return limitRender(() => {
         return new Promise((resolve, reject) => {
-            const texture = path.join('1024', this.name);
-            const rendered = path.join('preview', this.name);
+            let basename = path.basename(this.name, '.png');
+            const rendered = path.join('preview', basename + '.jpg');
             if (fs.existsSync(rendered)) {
                 return resolve();
             }
 
-            const renderDir = path.join('.tmp', path.basename(rendered, '.png'));
-            fs.mkdirSync(renderDir);
+            const outputdir = path.join('.tmp', basename);
+            fs.mkdirSync(outputdir);
 
             const blender = spawn('blender', [
                 '-b', 'scene.blend',
-                '-o', `//${renderDir}/`,
+                '-o', `//${outputdir}/`,
                 '-P', 'scene-texture.py',
                 '-F', 'JPEG',
                 '-a',
@@ -460,6 +460,10 @@ File.prototype.render = function () {
                 if (code !== 0) {
                     return reject(`Blender process exited with code ${code}`);
                 }
+
+                fs.renameSync(path.join(outputdir, '0001.jpg'), path.join('preview', basename + '.jpg'));
+
+                rimraf.sync(outputdir);
 
                 resolve();
             });
