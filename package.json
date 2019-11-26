@@ -18,8 +18,12 @@
   },
   "homepage": "https://github.com/nidorx/matcaps#readme",
   "dependencies": {
-    "@jimp/plugin-circle": "^0.8.5",
-    "jimp": "^0.8.5",
-    "node-vibrant": "^3.1.4"
+    "@jimp/plugin-circle": "0.8.5",
+    "chalk": "^3.0.0",
+    "cli-progress": "^3.4.0",
+    "jimp": "0.8.5",
+    "node-vibrant": "3.1.4",
+    "p-limit": "2.2.1",
+    "rimraf": "^3.0.0"
   }
 }
