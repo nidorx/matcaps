@@ -61,13 +61,13 @@ magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
     <tr>
         <td>
             <strong>2A2A2A_2A2A2A_DBDBDB_6A6A6A</strong>
-            <img src="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="max-width:100%;"/>
+            <img src="https://github.com/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="max-width:100%;"/>
         </td>
         <td>
-            <img src="/nidorx/matcaps/raw/master/palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="max-width:100%;"/>
+            <img src="/palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="max-width:100%;"/>
         </td>
         <td>
-            <img src="/nidorx/matcaps/raw/master/preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="max-width:100%;"/>
+            <img src="preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="max-width:100%;"/>
         </td>
         <td>
             <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">1024x1024</a>
