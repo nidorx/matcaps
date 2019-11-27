@@ -2,17 +2,15 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 const rimraf = require("rimraf");
+var sizeOf = require('image-size');
 
 const JSZip = require('jszip');
 
 const child_process = require('child_process');
 const spawn = require('child_process').spawn;
+const execSync = require('child_process').execSync;
 
-const Vibrant = require('node-vibrant');
-
-const Jimp = require('Jimp');
-const JimpCustom = require('@jimp/custom');
-const JimpCircle = require('@jimp/plugin-circle');
+const ColorThief = require('colorthief');
 
 const pLimit = require('p-limit');
 
@@ -22,7 +20,6 @@ const limitProccess = pLimit(10);
 // Limit Proccessing render (Blender)
 const limitRender = pLimit(2);
 
-const JimpC = JimpCustom({plugins: [JimpCircle]}, Jimp);
 
 // Temp dir, clear and recreate
 rimraf.sync('./.tmp');
@@ -74,7 +71,7 @@ const CUBE_MAX = CUBE_SMALL * 3;
 
 
 // File name regex
-var REG_FILE_NAME_COLORS = /^([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6}).*/;
+var REG_FILE_NAME_COLORS = /^([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6}).*/;
 
 /**
  * Work with one file (all references)
@@ -125,6 +122,23 @@ File.prototype.delete = function () {
     if (idx >= 0) {
         FILES.splice(idx, 1);
     }
+
+    const resolve = function () {
+        return Promise.resolve();
+    }.bind(this);
+
+    // Ignore all next execution
+    this.processExtension
+        = this.validateDimension
+        = this.extractPalette
+        = this.savePalettePreview
+        = this.render
+        = this.resize
+        = this.zip
+        = resolve;
+
+    return resolve();
+
 };
 
 /**
@@ -134,12 +148,24 @@ File.prototype.delete = function () {
  */
 File.prototype.process = function () {
     return this.processExtension()
-        .then(this.validateDimension.bind(this))
-        .then(this.proccessPalette.bind(this))
-        .then(this.createPaletteCube.bind(this))
-        .then(this.render.bind(this))
-        .then(this.zip.bind(this))
-        ;
+        .then(value => {
+            return this.validateDimension();
+        })
+        .then(value => {
+            return this.extractPalette();
+        })
+        .then(value => {
+            return this.savePalettePreview();
+        })
+        .then(value => {
+            return this.render();
+        })
+        .then(value => {
+            return this.resize();
+        })
+        .then(value => {
+            return this.zip();
+        });
 };
 
 /**
@@ -153,47 +179,46 @@ File.prototype.processExtension = function () {
         // Get this file extension
         const ext = path.extname(this.name);
         switch (ext.toLowerCase()) {
+            case '.png':
+                resolve();
+                break;
             case '.jpg':
+            case '.jpeg':
             case '.bmp':
+            case '.tga':
             case '.tif':
             case '.tiff':
                 const original = path.join('1024', this.name);
-                let renamed = path.join('1024', path.basename(original, ext) + '.png');
+                let basename = path.basename(this.name, ext);
+                const originalZMT = path.join('zmt', basename + '.zmt');
+                const originalZMTu = path.join('zmt', basename + '.ZMT');
+                let renamed = path.join('1024', basename + '.png');
+
                 let inc = 1;
                 while (true) {
                     if (fs.existsSync(renamed)) {
-                        renamed = path.join('1024', path.basename(original, ext) + '-' + (inc++) + '.png');
+                        renamed = path.join('1024', basename + '-' + (inc++) + '.png');
                     } else {
                         break;
                     }
                 }
 
-                if (['.jpg', '.bmp'].indexOf(ext) >= 0) {
-                    JimpC.read(original)
-                        .then((image) => {
-                            return image.writeAsync(renamed);
-                        })
-                        .then(() => {
-                            // Remove original
-                            fs.unlinkSync(original);
-                            this.name = path.basename(renamed);
-                        })
-                        .then(resolve)
-                        .catch(reject);
-                } else {
-                    // Use imagemagick, considere export from ZBrush (96bits C50 tif)
-                    child_process.execSync(`"magick" "${original}" -quality 100 -profile ./sRGB2014.icc "${renamed}"`, {stdio: [0, 1, 2]});
+                execSync(`"magick" "${original}" -profile ./sRGB2014.icc -colorspace RGB -strip "PNG24:${renamed}"`, {stdio: [0, 1, 2]});
 
-                    // Remove original
-                    fs.unlinkSync(original);
-                    this.name = path.basename(renamed);
+                // Remove original
+                fs.unlinkSync(original);
+                this.name = path.basename(renamed);
 
-                    resolve();
+                if (fs.existsSync(originalZMT)) {
+                    let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
+                    fs.renameSync(originalZMT, renamedZMT);
+                } else if (fs.existsSync(originalZMTu)) {
+                    let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
+                    fs.renameSync(originalZMTu, renamedZMT);
                 }
 
-                break;
-            case '.png':
                 resolve();
+
                 break;
             default:
                 // Remove invalid extension
@@ -209,51 +234,55 @@ File.prototype.processExtension = function () {
  */
 File.prototype.validateDimension = function () {
     let filepath = path.join('1024', this.name);
-    return JimpC.read(filepath)
-        .then((image) => {
-            var width = image.bitmap.width;
-            var height = image.bitmap.height;
 
-            if (width === 1024 && height === 1024) {
-                // Ok
-                return;
-            }
+    var dimensions = sizeOf(filepath);
 
-            if (width < 1024 || height < 1024) {
-                // Remover arquivos com dimensão menor que 1024x1024
-                this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
-                return this.delete();
-            }
+    var width = dimensions.width;
+    var height = dimensions.height;
 
-            if (width !== height) {
-                // Remove imagens que não são quadradas
-                this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
-                return this.delete();
-            }
+    if (width === 1024 && height === 1024) {
+        // Ok
+        return Promise.resolve();
+    }
 
-            return image
-                .resize(1024, 1024)
-                .writeAsync(filepath);
-        });
+    if (width < 1024 || height < 1024) {
+        // Remover arquivos com dimensão menor que 1024x1024
+        this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
+        return this.delete();
+    }
+
+    if (width !== height) {
+        // Remove imagens que não são quadradas
+        this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
+        return this.delete();
+    }
+
+    execSync(`"magick" "${original}" -resize 1024x1024 -strip "${renamed}"`, {stdio: [0, 1, 2]});
 };
+
+function rgbToHex(rgb) {
+    var hex = Number(rgb).toString(16);
+    if (hex.length < 2) {
+        hex = "0" + hex;
+    }
+    return hex;
+}
 
 /**
  * Faz o processamento da paleta de cores do arquivo
  *
  * @returns {Promise<any>}
  */
-File.prototype.proccessPalette = function () {
+File.prototype.extractPalette = function () {
     return new Promise((resolve, reject) => {
         if (!this.palette) {
             var parts = this.name.match(REG_FILE_NAME_COLORS);
             if (parts) {
                 this.palette = {
-                    Vibrant: parts[1],
-                    Muted: parts[2],
-                    LightVibrant: parts[3],
-                    LightMuted: parts[4],
-                    DarkVibrant: parts[5],
-                    DarkMuted: parts[6]
+                    A: parts[1],
+                    B: parts[2],
+                    C: parts[3],
+                    D: parts[4]
                 };
 
                 return resolve();
@@ -262,27 +291,34 @@ File.prototype.proccessPalette = function () {
             // Gera a paleta a partir da imagem original, e renomeia o arquivo atual
 
             const original = path.join('1024', this.name);
+            let basename = path.basename(this.name, '.png');
+            const originalZMT = path.join('zmt', basename + '.zmt');
+            const originalZMTu = path.join('zmt', basename + '.ZMT');
             const circular = path.join('.tmp', path.basename(original, '.png') + '.png');
-            return JimpC.read(original)
-                .then((image) => {
-                    // Create circular iamge
-                    return image.circle().writeAsync(circular);
+
+            var colorA = {};
+
+            // magick convert input.png \( -size 1024x1024 xc:none -fill white -draw "circle 512,512 512,0" \) -compose copy_opacity -composite output.png
+
+
+            // Create circular file to parse palette
+            execSync(`"magick" convert "${original}" ( -size 1024x1024 xc:none -fill white -draw "circle 512,512 512,0" ) -compose copy_opacity -composite "${circular}"`, {stdio: [0, 1, 2]});
+
+            return ColorThief.getColor(circular)
+                .then(rgb => {
+                    colorA = `${rgb.map(rgbToHex).join('')}`;
+                    return ColorThief.getPalette(circular, 5);
                 })
-                .then(value => {
-                    // Get palette
-                    return Vibrant.from(circular).getPalette();
-                })
-                .then(palette => {
+                .then(rgb => {
+
 
                     // Get name from palette
-                    // Ex. C65646_B36458_EC8C83_841D14_6A1B17_753B3C
+                    // Ex. C65646_B36458_EC8C83_841D14
                     var name = [
-                        palette.Vibrant.getHex(),
-                        palette.Muted.getHex(),
-                        palette.LightVibrant.getHex(),
-                        palette.LightMuted.getHex(),
-                        palette.DarkVibrant.getHex(),
-                        palette.DarkMuted.getHex()
+                        colorA,
+                        `${rgb[0].map(rgbToHex).join('')}`,
+                        `${rgb[1].map(rgbToHex).join('')}`,
+                        `${rgb[2].map(rgbToHex).join('')}`,
                     ].join('_').replace(/[#]/g, '').toUpperCase();
 
 
@@ -302,11 +338,19 @@ File.prototype.proccessPalette = function () {
                     // Delete temp file
                     fs.unlinkSync(circular);
 
-                    this.name = name;
+                    this.name = name + '.png';
+
+                    if (fs.existsSync(originalZMT)) {
+                        let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
+                        fs.renameSync(originalZMT, renamedZMT);
+                    } else if (fs.existsSync(originalZMTu)) {
+                        let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
+                        fs.renameSync(originalZMTu, renamedZMT);
+                    }
                 })
                 .then(value => {
                     // Check agai, by name now
-                    return this.proccessPalette();
+                    return this.extractPalette();
                 })
                 .then(resolve)
                 .catch(reject);
@@ -319,75 +363,55 @@ File.prototype.proccessPalette = function () {
 /**
  * Cria uma paleta com as cores prominentes do matcap (https://github.com/akfish/node-vibrant/)
  *
- * A = Vibrant
- * B = LightVibrant
- * C = DarkVibrant
- * D = LightMuted
- * E = DarkMuted
- * F = Muted
+ * A = Main
+ * B = Palette
+ * C = Palette
+ * D = Palette
  *
  * +----------------+--------+
  * |                |        |
- * |                |   B    |
  * |                |        |
- * |      A         +--------+
+ * |                |    B   |
+ * |      A         |        |
  * |                |        |
- * |                |    C   |
+ * |                +--------+
  * |                |        |
- * +--------+----------------+
- * |        |       |        |
- * |   D    |   E   |   F    |
- * |        |       |        |
- * +--------+-------+--------+
+ * +-----------+----+        |
+ * |           |             |
+ * |     C     |        D    |
+ * |           |             |
+ * +-----------+-------------+
  */
-File.prototype.createPaletteCube = function () {
+File.prototype.savePalettePreview = function () {
     return new Promise((resolve, reject) => {
         // palette
         const paletteFile = path.join('palette', this.name);
         fs.exists(paletteFile, (exists) => {
-            if (exists) {
-                return resolve();
+                if (exists) {
+                    return resolve();
+                }
+
+                const colors = {
+                    A: this.palette.A,
+                    B: this.palette.C,
+                    C: this.palette.E,
+                    D: this.palette.D
+                };
+
+                // magick convert -size 140x140 xc:"rgb(255, 0, 0)" -fill White  -draw "rectangle 5,5 10,10" square.png
+
+                execSync([
+                    `"magick" convert -size 120x120`,
+                    `xc:"#${colors.D}"`,
+                    `-fill "#${colors.B}" -draw "rectangle 80, 0, 120, 60"`,
+                    `-fill "#${colors.C}" -draw "rectangle 0, 80, 60, 120"`,
+                    `-fill "#${colors.A}" -draw "rectangle 0, 0, 80, 80"`,
+                    `"${paletteFile}"`
+                ].join(' '), {stdio: [0, 1, 2]});
+
+                resolve();
             }
-
-            const colors = {
-                A: JimpC.cssColorToHex(this.palette.Vibrant),
-                B: JimpC.cssColorToHex(this.palette.LightVibrant),
-                C: JimpC.cssColorToHex(this.palette.DarkVibrant),
-                D: JimpC.cssColorToHex(this.palette.LightMuted),
-                E: JimpC.cssColorToHex(this.palette.DarkMuted),
-                F: JimpC.cssColorToHex(this.palette.Muted)
-            };
-
-            new JimpC(CUBE_MAX, CUBE_MAX, (err, image) => {
-                if (err) {
-                    return reject(e);
-                }
-
-                let hexColor;
-                for (var x = 0; x < CUBE_MAX; x++) {
-                    for (var y = 0; y < CUBE_MAX; y++) {
-                        if (x < CUB_BIG && y < CUB_BIG) {
-                            hexColor = colors.A;
-                        } else if (x >= CUB_BIG && y < CUBE_SMALL) {
-                            hexColor = colors.B;
-                        } else if (x >= CUB_BIG && y < CUB_BIG) {
-                            hexColor = colors.C;
-                        } else if (x < CUBE_SMALL && y >= CUB_BIG) {
-                            hexColor = colors.D;
-                        } else if (x < CUB_BIG && y >= CUB_BIG) {
-                            hexColor = colors.E;
-                        } else {
-                            hexColor = colors.F;
-                        }
-                        image.setPixelColor(hexColor, x, y);
-                    }
-                }
-
-                image.writeAsync(paletteFile)
-                    .then(resolve)
-                    .catch(reject);
-            });
-        });
+        );
     });
 };
 
@@ -397,77 +421,99 @@ File.prototype.createPaletteCube = function () {
 File.prototype.render = function () {
     // Limit number of render
     return limitRender(() => {
-        return new Promise((resolve, reject) => {
-            let basename = path.basename(this.name, '.png');
-            const rendered = path.join('preview', basename + '.jpg');
-            if (fs.existsSync(rendered)) {
-                return resolve();
-            }
-
-            const outputdir = path.join('.tmp', basename);
-            fs.mkdirSync(outputdir);
-
-            const blender = spawn('blender', [
-                '-b', 'scene.blend',
-                '-o', `//${outputdir}/`,
-                '-P', 'scene-texture.py',
-                '-F', 'JPEG',
-                '-a',
-                '-s', '1',
-                '-e', '1',
-                '-j', '1',
-                '-t', '0',
-                '-E', 'CYCLES',
-            ], {
-                stdio: 'pipe',
-                env: {
-                    texture: `1024/${this.name}`
-                }
-            });
-
-            var stdout = '';
-            var stderr = '';
-
-            blender.stdout.on('data', (data) => {
-                stdout += data.toString();
-
-                var parts = stdout.split('\n');
-
-                stdout = parts.pop();
-
-                parts.forEach(value => {
-                    this.LOG.info(value);
-                });
-            });
-
-            blender.stderr.on('data', (data) => {
-                stderr += data.toString();
-
-                var parts = stderr.split('\n');
-
-                stderr = parts.pop();
-
-                parts.forEach(value => {
-                    this.LOG.error(value);
-                });
-            });
-
-            blender.on('close', (code) => {
-                this.LOG.info(`child process exited with code ${code}`);
-                if (code !== 0) {
-                    return reject(`Blender process exited with code ${code}`);
+            return new Promise((resolve, reject) => {
+                let basename = path.basename(this.name, '.png');
+                const rendered = path.join('preview', basename + '.jpg');
+                if (fs.existsSync(rendered)) {
+                    return resolve();
                 }
 
-                fs.renameSync(path.join(outputdir, '0001.jpg'), path.join('preview', basename + '.jpg'));
+                const outputdir = path.join('.tmp', basename);
+                fs.mkdirSync(outputdir);
 
-                rimraf.sync(outputdir);
+                const blender = spawn('blender', [
+                    '-b', 'scene.blend',
+                    '-o',
+                    `//${outputdir}/`,
+                    '-P', 'scene-texture.py',
+                    '-F', 'JPEG',
+                    '-a',
+                    '-s', '1',
+                    '-e', '1',
+                    '-j', '1',
+                    '-t', '0',
+                    '-E', 'CYCLES',
+                ], {
+                    stdio: 'pipe',
+                    env: {
+                        texture: `1024/${this.name}`
+                    }
+                });
 
-                resolve();
+                var stdout = '';
+                var stderr = '';
+
+                blender.stdout.on('data', (data) => {
+                    stdout += data.toString();
+
+                    var parts = stdout.split('\n');
+
+                    stdout = parts.pop();
+
+                    parts.forEach(value => {
+                        this.LOG.info(value);
+                    });
+                });
+
+                blender.stderr.on('data', (data) => {
+                    stderr += data.toString();
+
+                    var parts = stderr.split('\n');
+
+                    stderr = parts.pop();
+
+                    parts.forEach(value => {
+                        this.LOG.error(value);
+                    });
+                });
+
+                blender.on('close', (code) => {
+                    if (code !== 0) {
+                        return reject(`Blender process exited with code ${code}`);
+                    }
+
+                    fs.renameSync(path.join(outputdir, '0001.jpg'), path.join('preview', basename + '.jpg'));
+
+                    rimraf.sync(outputdir);
+
+                    resolve();
+                });
             });
-        });
-    });
+        }
+    );
 };
 
+/**
+ * Create resized versions (512, 256, 128, 64)
+ */
+File.prototype.resize = function () {
+    const original = path.join('1024', this.name);
+    ['64', '128', '256', '512'].forEach(size => {
+        const resized = path.join(size, this.name);
+        if (!fs.existsSync(resized)) {
+            execSync(`"magick" "${original}" -resize ${size}x${size} -strip "${resized}"`, {stdio: [0, 1, 2]});
+        }
+    });
+
+    return Promise.resolve();
+};
+
+
+/**
+ * Create a zip file with all resources of this texture
+ *
+ * @returns {Promise<any>}
+ */
 File.prototype.zip = function () {
     return new Promise((resolve, reject) => {
         let basename = path.basename(this.name, '.png');
