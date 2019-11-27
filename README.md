@@ -1,11 +1,20 @@
 # matcaps
+
 Huge library of matcap PNG textures organized by color
 
 
-## About
+
+## O que é Matcap
 
 
-## 
+
+## Formato das texturas
+
+sRBG PNG 24 bits (8 bits by chanel without alpha chanel)
+
+
+
+
 
 
 https://developer.android.com/reference/android/support/v7/graphics/Palette.html
@@ -46,3 +55,28 @@ magick rose.tif -colorspace RGB -filter Box -resize 35x23 -colorspace sRGB rose1
 magick rose.tif -set colorspace sRGB -colorspace RGB roseRGB.tif
 magick roseRGB.tif -filter Box -resize 35x23 roseSMALL.tif
 magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
+
+
+<table style="width:100%">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th>
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Jill</td>
+    <td>Smith</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>
+    <td>94</td>
+  </tr>
+</table>
+
+# Matcaps
+
+| Italic | Block letters | Block letters |
+| ---- | --- | --- |
+| ![](128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png) | ![](palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png) | ![](preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg) |

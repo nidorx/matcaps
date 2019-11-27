@@ -2,13 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 const rimraf = require("rimraf");
-var sizeOf = require('image-size');
+const sizeOf = require('image-size');
 
 const JSZip = require('jszip');
 
+
 const child_process = require('child_process');
-const spawn = require('child_process').spawn;
-const execSync = require('child_process').execSync;
+const spawn = child_process.spawn;
+const execSync = child_process.execSync;
 
 const ColorThief = require('colorthief');
 
@@ -23,7 +24,13 @@ const limitRender = pLimit(2);
 
 // Temp dir, clear and recreate
 rimraf.sync('./.tmp');
-fs.mkdirSync('./.tmp');
+
+['./.tmp', '64', '128', '256', '512', 'palette', 'preview'].forEach(folder => {
+    folder = path.join('./', folder);
+    if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder);
+    }
+});
 
 var LOG_IDX = 0;
 const WARNING = chalk.keyword('orange');
@@ -103,6 +110,8 @@ function File(name) {
             console.warn.apply(undefined, parts);
         }.bind(this)
     };
+
+    this.LOG.info(this.name);
 }
 
 /**
@@ -134,7 +143,6 @@ File.prototype.delete = function () {
         = this.savePalettePreview
         = this.render
         = this.resize
-        = this.zip
         = resolve;
 
     return resolve();
@@ -163,9 +171,7 @@ File.prototype.process = function () {
         .then(value => {
             return this.resize();
         })
-        .then(value => {
-            return this.zip();
-        });
+        ;
 };
 
 /**
@@ -190,8 +196,6 @@ File.prototype.processExtension = function () {
             case '.tiff':
                 const original = path.join('1024', this.name);
                 let basename = path.basename(this.name, ext);
-                const originalZMT = path.join('zmt', basename + '.zmt');
-                const originalZMTu = path.join('zmt', basename + '.ZMT');
                 let renamed = path.join('1024', basename + '.png');
 
                 let inc = 1;
@@ -203,21 +207,18 @@ File.prototype.processExtension = function () {
                     }
                 }
 
-                execSync(`"magick" "${original}" -profile ./sRGB2014.icc -colorspace RGB -strip "PNG24:${renamed}"`, {stdio: [0, 1, 2]});
+                execSync([
+                    `magick "${original}" -profile ./sRGB2014.icc -colorspace RGB`,
+                    `-strip "PNG24:${renamed}"`,
+                ].join(' '), {stdio: [0, 1, 2]});
 
                 // Remove original
                 fs.unlinkSync(original);
                 this.name = path.basename(renamed);
 
-                if (fs.existsSync(originalZMT)) {
-                    let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
-                    fs.renameSync(originalZMT, renamedZMT);
-                } else if (fs.existsSync(originalZMTu)) {
-                    let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
-                    fs.renameSync(originalZMTu, renamedZMT);
-                }
-
-                resolve();
+                this.renameZMT(path.basename(original), this.name)
+                    .then(resolve)
+                    .catch(reject);
 
                 break;
             default:
@@ -229,13 +230,56 @@ File.prototype.processExtension = function () {
 };
 
 /**
+ * Parse zmt file after rename this
+ *
+ * @param oldname
+ * @param name
+ * @returns {*}
+ */
+File.prototype.renameZMT = function (oldname, name) {
+
+    let basename = path.basename(oldname, '.png');
+    const originalZMT = path.join('zmt', basename + '.zmt');
+    const originalZMTu = path.join('zmt', basename + '.ZMT');
+
+    basename = path.basename(name, '.png');
+
+    let renamedZMT = path.join('zmt', basename + '.zmt');
+    let renamedZMTZip = path.join('zmt', basename + '-zmt.zip');
+    let needToZipZMT = false;
+    if (fs.existsSync(originalZMT)) {
+        fs.renameSync(originalZMT, renamedZMT);
+        needToZipZMT = true;
+    } else if (fs.existsSync(originalZMTu)) {
+        fs.renameSync(originalZMTu, renamedZMT);
+        needToZipZMT = true;
+    }
+
+    if (needToZipZMT && !fs.existsSync(renamedZMTZip)) {
+        const zip = new JSZip();
+        const zmtFilename = name + '.zmt';
+
+        zfolder.file(zmtFilename, fs.createReadStream(renamedZMT));
+
+        return new Promise((resolve, reject) => {
+            zip.generateNodeStream({type: 'nodebuffer', streamFiles: true})
+                .pipe(fs.createWriteStream(renamedZMTZip))
+                .on('error', reject)
+                .on('finish', resolve)
+        })
+    }
+
+    return Promise.resolve();
+};
+
+/**
  * Remover arquivos com dimensão menor que 1024x1024
  * Redimensionar arquivos com dimensão maior que 1024x1024 para esse valor
  */
 File.prototype.validateDimension = function () {
-    let filepath = path.join('1024', this.name);
+    let original = path.join('1024', this.name);
 
-    var dimensions = sizeOf(filepath);
+    var dimensions = sizeOf(original);
 
     var width = dimensions.width;
     var height = dimensions.height;
@@ -247,17 +291,20 @@ File.prototype.validateDimension = function () {
 
     if (width < 1024 || height < 1024) {
         // Remover arquivos com dimensão menor que 1024x1024
-        this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
+        this.LOG.warn(`Removing "${original}": invalid resolution ${width}x${height}`);
         return this.delete();
     }
 
     if (width !== height) {
         // Remove imagens que não são quadradas
-        this.LOG.warn(`Removing "${filepath}": invalid resolution ${width}x${height}`);
+        this.LOG.warn(`Removing "${original}": invalid resolution ${width}x${height}`);
         return this.delete();
     }
 
-    execSync(`"magick" "${original}" -resize 1024x1024 -strip "${renamed}"`, {stdio: [0, 1, 2]});
+    execSync([
+        `magick "${original}" -profile ./sRGB2014.icc -colorspace RGB`,
+        `-resize 1024x1024  -strip "PNG24:${original}"`,
+    ].join(' '), {stdio: [0, 1, 2]});
 };
 
 function rgbToHex(rgb) {
@@ -292,17 +339,16 @@ File.prototype.extractPalette = function () {
 
             const original = path.join('1024', this.name);
             let basename = path.basename(this.name, '.png');
-            const originalZMT = path.join('zmt', basename + '.zmt');
-            const originalZMTu = path.join('zmt', basename + '.ZMT');
             const circular = path.join('.tmp', path.basename(original, '.png') + '.png');
 
             var colorA = {};
 
-            // magick convert input.png \( -size 1024x1024 xc:none -fill white -draw "circle 512,512 512,0" \) -compose copy_opacity -composite output.png
-
-
             // Create circular file to parse palette
-            execSync(`"magick" convert "${original}" ( -size 1024x1024 xc:none -fill white -draw "circle 512,512 512,0" ) -compose copy_opacity -composite "${circular}"`, {stdio: [0, 1, 2]});
+            execSync([
+                `magick convert "${original}"`,
+                `( -size 1024x1024 xc:none -fill white -draw "circle 512,512 512,0" )`,
+                `-compose copy_opacity -composite "${circular}"`
+            ].join(' '), {stdio: [0, 1, 2]});
 
             return ColorThief.getColor(circular)
                 .then(rgb => {
@@ -332,21 +378,20 @@ File.prototype.extractPalette = function () {
                         }
                     }
 
-                    // Rename file on disk
-                    fs.renameSync(original, renamed);
+                    // Rename file on disk, force sRGB without embedded profile
+                    execSync(
+                        `magick "${original}" -profile ./sRGB2014.icc -colorspace RGB -strip "PNG24:${renamed}"`,
+                        {stdio: [0, 1, 2]}
+                    );
 
-                    // Delete temp file
+                    // Delete old and temp files
+                    fs.unlinkSync(original);
                     fs.unlinkSync(circular);
 
                     this.name = name + '.png';
 
-                    if (fs.existsSync(originalZMT)) {
-                        let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
-                        fs.renameSync(originalZMT, renamedZMT);
-                    } else if (fs.existsSync(originalZMTu)) {
-                        let renamedZMT = path.join('zmt', path.basename(renamed, '.png') + '.zmt');
-                        fs.renameSync(originalZMTu, renamedZMT);
-                    }
+
+                    return this.renameZMT(path.basename(original), this.name);
                 })
                 .then(value => {
                     // Check agai, by name now
@@ -385,7 +430,7 @@ File.prototype.extractPalette = function () {
 File.prototype.savePalettePreview = function () {
     return new Promise((resolve, reject) => {
         // palette
-        const paletteFile = path.join('palette', this.name);
+        const paletteFile = path.join('palette', path.basename(this.name, '.png') + '-palette.png');
         fs.exists(paletteFile, (exists) => {
                 if (exists) {
                     return resolve();
@@ -401,7 +446,7 @@ File.prototype.savePalettePreview = function () {
                 // magick convert -size 140x140 xc:"rgb(255, 0, 0)" -fill White  -draw "rectangle 5,5 10,10" square.png
 
                 execSync([
-                    `"magick" convert -size 120x120`,
+                    `magick convert -size 120x120`,
                     `xc:"#${colors.D}"`,
                     `-fill "#${colors.B}" -draw "rectangle 80, 0, 120, 60"`,
                     `-fill "#${colors.C}" -draw "rectangle 0, 80, 60, 120"`,
@@ -423,7 +468,7 @@ File.prototype.render = function () {
     return limitRender(() => {
             return new Promise((resolve, reject) => {
                 let basename = path.basename(this.name, '.png');
-                const rendered = path.join('preview', basename + '.jpg');
+                const rendered = path.join('preview', basename + '-preview.jpg');
                 if (fs.existsSync(rendered)) {
                     return resolve();
                 }
@@ -482,7 +527,7 @@ File.prototype.render = function () {
                         return reject(`Blender process exited with code ${code}`);
                     }
 
-                    fs.renameSync(path.join(outputdir, '0001.jpg'), path.join('preview', basename + '.jpg'));
+                    fs.renameSync(path.join(outputdir, '0001.jpg'), rendered);
 
                     rimraf.sync(outputdir);
 
@@ -499,58 +544,13 @@ File.prototype.render = function () {
 File.prototype.resize = function () {
     const original = path.join('1024', this.name);
     ['64', '128', '256', '512'].forEach(size => {
-        const resized = path.join(size, this.name);
+        const resized = path.join(size, path.basename(this.name, '.png') + '-' + size + 'px.png');
         if (!fs.existsSync(resized)) {
-            execSync(`"magick" "${original}" -resize ${size}x${size} -strip "${resized}"`, {stdio: [0, 1, 2]});
+            execSync(`magick "${original}" -resize ${size}x${size} -strip "${resized}"`, {stdio: [0, 1, 2]});
         }
     });
 
     return Promise.resolve();
-};
-
-
-/**
- * Create a zip file with all resources of this texture
- *
- * @returns {Promise<any>}
- */
-File.prototype.zip = function () {
-    return new Promise((resolve, reject) => {
-        let basename = path.basename(this.name, '.png');
-        const zippath = path.join('zip', basename + '.zip');
-        if (fs.existsSync(zippath)) {
-            return resolve();
-        }
-
-        var zip = new JSZip();
-
-        [
-            {folder: '64', ext: '.png'},
-            {folder: '128', ext: '.png'},
-            {folder: '256', ext: '.png'},
-            {folder: '512', ext: '.png'},
-            {folder: '1024', ext: '.png'},
-            {folder: 'palette', ext: '.png'},
-            {folder: 'preview', ext: '.jpg'},
-            {folder: 'zmt', ext: '.zmt'},
-        ].forEach(item => {
-            let folder = item.folder;
-            let ext = item.ext;
-            let filename = basename + ext;
-
-            const filepath = path.join(folder, filename);
-            if (fs.existsSync(filepath)) {
-                var zfolder = zip.folder(folder);
-                zfolder.file(filename, fs.createReadStream(filepath));
-            }
-        });
-
-        // Save zip content
-        zip.generateNodeStream({type: 'nodebuffer', streamFiles: true})
-            .pipe(fs.createWriteStream(zippath))
-            .on('error', reject)
-            .on('finish', resolve);
-    });
 };
 
 // Read all files
@@ -567,9 +567,65 @@ Promise
         })
     }))
     .then(value => {
+        // Remove orphans
+        const validNames = fs.readdirSync('1024');
+        ['64', '128', '256', '512'].forEach(size => {
+
+            fs.readdirSync(size)
+                .map(file => {
+                    return file.replace(/-\d+px.png$/, '');
+                })
+                .filter(file => {
+                    return validNames.indexOf(file + '.png') < 0
+                })
+                .forEach(file => {
+                    var fpath = path.join(size, file + '-' + size + 'px.png');
+                    if (fs.existsSync(fpath)) {
+                        fs.unlinkSync(fpath);
+                    }
+                });
+        });
+
+        ['palette', 'preview'].forEach(folder => {
+            var ext = folder === 'palette' ? '.png' : '.jpg';
+            fs.readdirSync(folder)
+                .map(file => {
+                    return file.replace(/-[^.]+.(png|jpg)$/, '');
+                })
+                .filter(file => {
+                    return validNames.indexOf(file + '.png') < 0
+                })
+                .forEach(file => {
+                    var fpath = path.join(folder, file + '-' + folder + ext);
+                    if (fs.existsSync(fpath)) {
+                        fs.unlinkSync(fpath);
+                    }
+                });
+        });
+    })
+    .then(value => {
+        // Gerar documentação
+
+        var template = fs.readFileSync('resources/TEMPLATE.md', 'utf8');
+
+        fs.readdirSync('1024')
+            .forEach(file => {
+                var basename = path.basename(file, '.png');
+                template += [
+                    '| ![](128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png)',
+                    '| ![](palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png)',
+                    '| ![](preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg) |',
+                ].join(' ');
+                return file.replace(/-[^.]+.(png|jpg)$/, '');
+            })
+    })
+    .then(value => {
+        // Criar tile com grupo de previews
+        // magick montage -tile 10x0 -geometry +1+1 -border 1 -bordercolor black -scale 84x84 *.jpg out.jpeg
+    })
+    .then(value => {
         console.log('Ok!')
     })
     .catch(reason => {
         console.error(reason);
     });
-

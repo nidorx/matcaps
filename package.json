@@ -16,6 +16,7 @@
   "homepage": "https://github.com/nidorx/matcaps#readme",
   "dependencies": {
     "chalk": "3.0.0",
+    "color-sorter": "^4.0.0",
     "colorthief": "2.3.0",
     "image-size": "0.8.3",
     "jszip": "3.2.2",
