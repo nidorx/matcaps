@@ -58,25 +58,25 @@ magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
 
 
 <table style="width:100%">
-  <tr>
-    <th>Firstname</th>
-    <th>Lastname</th>
-    <th>Age</th>
-  </tr>
-  <tr>
-    <td>Jill</td>
-    <td>Smith</td>
-    <td>50</td>
-  </tr>
-  <tr>
-    <td>Eve</td>
-    <td>Jackson</td>
-    <td>94</td>
+    <tr>
+        <td>
+            <strong>2A2A2A_2A2A2A_DBDBDB_6A6A6A</strong>
+            <img src="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="max-width:100%;"/>
+        </td>
+        <td>
+            <img src="/nidorx/matcaps/raw/master/palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="max-width:100%;"/>
+        </td>
+        <td>
+            <img src="/nidorx/matcaps/raw/master/preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="max-width:100%;"/>
+        </td>
+        <td>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">1024x1024</a>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">512x512</a>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">256x256</a>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">128x128</a>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">.ZMT</a>
+        </td>
   </tr>
 </table>
 
-# Matcaps
 
-| Italic | Block letters | Block letters |
-| ---- | --- | --- |
-| ![](128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png) | ![](palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png) | ![](preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg) |
