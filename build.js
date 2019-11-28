@@ -237,30 +237,12 @@ File.prototype.renameZMT = function (oldname, name) {
     const originalZMTu = path.join('zmt', basename + '.ZMT');
 
     basename = path.basename(name, '.png');
-
     let renamedZMT = path.join('zmt', basename + '.zmt');
-    let renamedZMTZip = path.join('zmt', basename + '-zmt.zip');
-    let needToZipZMT = false;
+
     if (fs.existsSync(originalZMT)) {
         fs.renameSync(originalZMT, renamedZMT);
-        needToZipZMT = true;
     } else if (fs.existsSync(originalZMTu)) {
         fs.renameSync(originalZMTu, renamedZMT);
-        needToZipZMT = true;
-    }
-
-    if (needToZipZMT && !fs.existsSync(renamedZMTZip)) {
-        const zip = new JSZip();
-        const zmtFilename = name + '.zmt';
-
-        zfolder.file(zmtFilename, fs.createReadStream(renamedZMT));
-
-        return new Promise((resolve, reject) => {
-            zip.generateNodeStream({type: 'nodebuffer', streamFiles: true})
-                .pipe(fs.createWriteStream(renamedZMTZip))
-                .on('error', reject)
-                .on('finish', resolve)
-        })
     }
 
     return Promise.resolve();
@@ -640,27 +622,28 @@ Promise
         allfiles.forEach(file => {
             var name = path.basename(file, '.png');
             table.push([
-                `<tr>`,
-                `    <td align="center">`,
-                `        <img src="preview/${name}-preview.jpg"/>`,
-                `    </td>`,
-                `    <td align="right">`,
-                `        <img src="thumbnail/${name}.jpg"/>`,
-                `        <br/>`,
-                `        <img src="palette/${name}-palette.png"/>`,
-                `        <br/>`,
-                // https://github.com/nidorx/matcaps/raw/master/1024/070B0C_070B0C_B2C7CE_728FA3.png
-                // /nidorx/matcaps/raw/master/preview/070B0C_070B0C_B2C7CE_728FA3-preview.jpg
-                // https://github.com/nidorx/matcaps/blob/master/raw/master/1024/070B0C_070B0C_B2C7CE_728FA3.png
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
-                `        <a href="https://github.com/nidorx/matcaps/raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
-                `        <p><strong>${name}</strong></p>`,
-                `    </td>`,
-                `</tr>`,
+                `    <tr>`,
+                `        <td align="center">`,
+                `            <img src="preview/${name}-preview.jpg"/>`,
+                `        </td>`,
+                `        <td align="right">`,
+                `            <img src="thumbnail/${name}.jpg"/>`,
+                `            <br/>`,
+                `            <img src="palette/${name}-palette.png"/>`,
+                `            <br/>`,
+                `            <a href="https://github.com/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
+                `            <a href="https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
+                `            <a href="https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
+                `            <a href="https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
+                `            <a href="https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
+                (
+                    fs.existsSync(path.join('zmt', name + '.zmt'))
+                        ? `            <a href="https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt" target="_blank">ZBrush Material (ZMT)</a>`
+                        : '            <strike>ZBrush Material (ZMT)</strike>'
+                ),
+                `            <p><strong>${name}</strong></p>`,
+                `        </td>`,
+                `    </tr>`,
             ].join('\n'));
         });
 
