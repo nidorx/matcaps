@@ -628,6 +628,9 @@ Promise
 
             // * [Page 1](PAGE-2.md)
 
+            // Navigation
+            pageMD.push(`## Navigation`);
+            pageMD.push(`* [Home](/)`);
             for (var pagei = 1; pagei <= PAGES; pagei++) {
                 if (pagei === page) {
                     pageMD.push(`* Page ${pagei}`);
@@ -635,6 +638,7 @@ Promise
                     pageMD.push(`* [Page ${pagei}](PAGE-${pagei}.md)`);
                 }
             }
+            pageMD.push(`## Page ${pagei} Matcaps`);
 
             const pagePreviews = [];
             for (var m = page * PAGE_SIZE; i < m && i < allfiles.length; i++) {
