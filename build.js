@@ -19,7 +19,7 @@ const pLimit = require('p-limit');
 const limitProccess = pLimit(10);
 
 // Limit Proccessing render (Blender)
-const limitRender = pLimit(2);
+const limitRender = pLimit(5);
 
 
 // Temp dir, clear and recreate
@@ -70,12 +70,6 @@ var COLORS = [
 
 // All files
 const FILES = [];
-
-// Palette cube sizes
-const CUBE_SMALL = 40;
-const CUB_BIG = CUBE_SMALL * 2;
-const CUBE_MAX = CUBE_SMALL * 3;
-
 
 // File name regex
 var REG_FILE_NAME_COLORS = /^([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6})_([A-F0-9]{6}).*/;
@@ -446,13 +440,15 @@ File.prototype.savePalettePreview = function () {
                 // magick convert -size 140x140 xc:"rgb(255, 0, 0)" -fill White  -draw "rectangle 5,5 10,10" square.png
 
                 execSync([
-                    `magick convert -size 120x120`,
+                    `magick convert -size 94x94`,
                     `xc:"#${colors.D}"`,
-                    `-fill "#${colors.B}" -draw "rectangle 80, 0, 120, 60"`,
-                    `-fill "#${colors.C}" -draw "rectangle 0, 80, 60, 120"`,
-                    `-fill "#${colors.A}" -draw "rectangle 0, 0, 80, 80"`,
+                    `-fill "#${colors.B}" -draw "rectangle 62, 0, 94, 47"`,
+                    `-fill "#${colors.C}" -draw "rectangle 0, 62, 47, 94"`,
+                    `-fill "#${colors.A}" -draw "rectangle 0, 0, 62, 62"`,
                     `"${paletteFile}"`
                 ].join(' '), {stdio: [0, 1, 2]});
+
+                borderRadius(paletteFile, 94);
 
                 resolve();
             }
@@ -531,6 +527,9 @@ File.prototype.render = function () {
 
                     rimraf.sync(outputdir);
 
+                    borderRadius(rendered, 512);
+
+
                     resolve();
                 });
             });
@@ -550,8 +549,32 @@ File.prototype.resize = function () {
         }
     });
 
+    // For github list
+    const preview255 = path.join('thumbnail', path.basename(this.name, '.png') +  '.jpg');
+    if (!fs.existsSync(preview255)) {
+        execSync(`magick "${original}" -resize 255x255 -strip "${preview255}"`, {stdio: [0, 1, 2]});
+        borderRadius(preview255, 255);
+    }
+
     return Promise.resolve();
 };
+
+/**
+ * Add border radius to file
+ *
+ * @param file
+ * @param size
+ * @param ext
+ */
+function borderRadius(file, size) {
+    var dir = path.dirname(file);
+    var maskFile = path.join('./.tmp', `corner_mask_${size}.png`);
+    if (!fs.existsSync(maskFile)) {
+        execSync(`magick convert -size ${size}x${size} xc:none -alpha transparent -background none -fill white -draw "roundRectangle 0,0 ${size - 1},${size - 1} 6,6" "${maskFile}"`, {stdio: [0, 1, 2]});
+    }
+
+    execSync(`magick convert "${file}" -alpha on "${maskFile}" -compose Dst_In -composite -background white -alpha Remove "${file}"`, {stdio: [0, 1, 2]});
+}
 
 // Read all files
 fs.readdirSync('1024').forEach(file => {

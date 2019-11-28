@@ -63,7 +63,7 @@ magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
             <img src="preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="border-radius: 5px;"/>
         </td>
         <td align="right">
-            <img src="128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="border-radius: 5px;"/>
+            <img src="thumbnail/2A2A2A_2A2A2A_DBDBDB_6A6A6A.jpg" style="border-radius: 5px;"/>
             <br/>
             <img src="palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="border-radius: 5px;"/>
             <br/>
