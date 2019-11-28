@@ -649,7 +649,6 @@ Promise
                     `![](thumbnail/${name}.jpg)`,
                     `![](palette/${name}-palette.png)`,
                     '',// BR
-                    ':package: ',// BR
                     `[[1024px](https://github.com/nidorx/matcaps/raw/master/1024/${name}.png)]`,
                     `[[512px](https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png)]`,
                     `[[256px](https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png)]`,
@@ -658,6 +657,7 @@ Promise
                     fs.existsSync(path.join('zmt', name + '.zmt'))
                         ? `[[ZBrush Material (ZMT)](https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt)]`
                         : '[~~ZBrush Material (ZMT)~~]',
+                    '---'
                 ].join('\n'));
             }
             fs.writeFileSync(`./PAGE-${page}.md`, pageMD.join('\n'));
