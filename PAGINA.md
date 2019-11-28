@@ -20,7 +20,7 @@ Huge library of matcap PNG textures organized by color
         <a href="https://github.com/nidorx/matcaps/raw/master/256/070B0C_070B0C_B2C7CE_728FA3-256px.png" target="_blank">256px</a><br/>
         <a href="https://github.com/nidorx/matcaps/raw/master/128/070B0C_070B0C_B2C7CE_728FA3-128px.png" target="_blank">128px</a><br/>
         <a href="https://github.com/nidorx/matcaps/raw/master/64/070B0C_070B0C_B2C7CE_728FA3-64px.png" target="_blank">64px</a><br/>
-        <a href="#" target="_blank"><strike>ZBrush Material (ZMT)</strike></a>
+        <strike>ZBrush Material (ZMT)</strike>
         <p><strong>070B0C_070B0C_B2C7CE_728FA3</strong></p>
     </td>
 </tr>
