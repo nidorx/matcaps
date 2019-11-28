@@ -550,10 +550,10 @@ File.prototype.resize = function () {
     });
 
     // For github list
-    const preview255 = path.join('thumbnail', path.basename(this.name, '.png') + '.jpg');
-    if (!fs.existsSync(preview255)) {
-        execSync(`magick "${original}" -resize 255x255 -strip "${preview255}"`, {stdio: [0, 1, 2]});
-        borderRadius(preview255, 255);
+    const thumbnail = path.join('thumbnail', path.basename(this.name, '.png') + '.jpg');
+    if (!fs.existsSync(thumbnail)) {
+        execSync(`magick "${original}" -resize 232x232 -strip "${thumbnail}"`, {stdio: [0, 1, 2]});
+        borderRadius(thumbnail, 232);
     }
 
     return Promise.resolve();
@@ -570,7 +570,7 @@ function borderRadius(file, size) {
     var dir = path.dirname(file);
     var maskFile = path.join('./.tmp', `corner_mask_${size}.png`);
     if (!fs.existsSync(maskFile)) {
-        execSync(`magick convert -size ${size}x${size} xc:none -alpha transparent -background none -fill white -draw "roundRectangle 0,0 ${size - 1},${size - 1} 6,6" "${maskFile}"`, {stdio: [0, 1, 2]});
+        execSync(`magick convert -size ${size}x${size} xc:none -alpha transparent -background none -fill white -draw "roundRectangle 0,0 ${size - 1},${size - 1} 12,12" "${maskFile}"`, {stdio: [0, 1, 2]});
     }
 
     execSync(`magick convert "${file}" -alpha on "${maskFile}" -compose Dst_In -composite -background white -alpha Remove "${file}"`, {stdio: [0, 1, 2]});
@@ -649,12 +649,12 @@ Promise
                 `        <br/>`,
                 `        <img src="palette/${name}-palette.png"/>`,
                 `        <br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
-                `        <a href="/nidorx/matcaps/raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
+                `        <a href="raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
+                `        <a href="raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
+                `        <a href="raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
+                `        <a href="raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
+                `        <a href="raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
+                `        <a href="raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
                 `        <p><strong>${name}</strong></p>`,
                 `    </td>`,
                 `</tr>`,
