@@ -30,8 +30,3 @@ https://gist.github.com/diramazioni/9255292
 
 
 
-
-## Page 1
-[![](preview/page-1.jpg)](PAGE-1.md)
-## Page 2
-[![](preview/page-2.jpg)](PAGE-2.md)

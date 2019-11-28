@@ -611,47 +611,62 @@ Promise
         return allfiles;
     })
     .then(allfiles => {
+        // @TODO: Sort by colors
+
+
         // Gerar documentação
+        const TPL_README = fs.readFileSync('resources/TPL_README.md', 'utf8');
+        const TPL_PAGE = fs.readFileSync('resources/TPL_PAGE.md', 'utf8');
+        const PAGE_SIZE = 50;
+        const PAGES = Math.ceil(allfiles.length / PAGE_SIZE);
 
-        var template = fs.readFileSync('resources/TEMPLATE.md', 'utf8');
+        const readmeMD = [TPL_README];
 
-        var table = [
-            '<table style="width:100%">'
-        ];
+        var i = 0;
+        for (var page = 1; page <= PAGES; page++) {
+            const pageMD = [TPL_PAGE];
+            const pagePreviews = [];
+            for (var m = page * PAGE_SIZE; i < m && i < allfiles.length; i++) {
+                var file = allfiles[i];
+                var name = path.basename(file, '.png');
 
-        allfiles.forEach(file => {
-            var name = path.basename(file, '.png');
-            table.push([
-                `    <tr>`,
-                `        <td align="center">`,
-                `            <img src="preview/${name}-preview.jpg"/>`,
-                `        </td>`,
-                `        <td align="right">`,
-                `            <img src="thumbnail/${name}.jpg"/>`,
-                `            <br/>`,
-                `            <img src="palette/${name}-palette.png"/>`,
-                `            <br/>`,
-                `            <a href="https://github.com/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
-                `            <a href="https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
-                `            <a href="https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
-                `            <a href="https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
-                `            <a href="https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
-                (
+                pagePreviews.push(`preview/${name}-preview.jpg`);
+
+                pageMD.push([
+                    `## ${name}`,
+                    `![](preview/${name}-preview.jpg)`,
+                    `![](thumbnail/${name}.jpg)`,
+                    `![](palette/${name}-palette.png)`,
+                    '',// BR
+                    `[1024px](https://github.com/nidorx/matcaps/raw/master/1024/${name}.png)`,
+                    `[512px](https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png)`,
+                    `[256px](https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png)`,
+                    `[128px](https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png)`,
+                    `[64px](https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png)`,
                     fs.existsSync(path.join('zmt', name + '.zmt'))
-                        ? `            <a href="https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt" target="_blank">ZBrush Material (ZMT)</a>`
-                        : '            <strike>ZBrush Material (ZMT)</strike>'
-                ),
-                `            <p><strong>${name}</strong></p>`,
-                `        </td>`,
-                `    </tr>`,
+                        ? `[ZBrush Material (ZMT)](https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt)`
+                        : '~~ZBrush Material (ZMT)~~',
+                ].join('\n'));
+            }
+            fs.writeFileSync(`./PAGE-${page}.md`, pageMD.join('\n'));
+
+
+            // Generate page preview
+            execSync([
+                `magick montage -tile 10x0 -geometry +1+1 -border 1 -bordercolor black -scale 84x84`,
+                `"${pagePreviews.join('" "')}"`,
+                `preview/page-${page}.jpg`
+            ].join(' '), {stdio: [0, 1, 2]});
+
+            readmeMD.push([
+                `## Page ${page}`,
+                `[![](preview/page-${page}.jpg)](PAGE-${page}.md)`,
             ].join('\n'));
-        });
+        }
 
-        table.push('</table>');
+        // Update README.md
+        fs.writeFileSync(`./README.md`, readmeMD.join('\n'));
 
-        template += table.join('\n');
-
-        fs.writeFileSync('./PAGINA.md', template);
     })
     .then(value => {
         // Criar tile com grupo de previews
