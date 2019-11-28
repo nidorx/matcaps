@@ -56,25 +56,25 @@ magick rose.tif -set colorspace sRGB -colorspace RGB roseRGB.tif
 magick roseRGB.tif -filter Box -resize 35x23 roseSMALL.tif
 magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
 
-    border-radius: 5px;
+
 <table style="width:100%">
     <tr>
-        <td>
-            <strong>2A2A2A_2A2A2A_DBDBDB_6A6A6A</strong><br/>
-            <img src="preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="max-width:100%;"/>
+        <td align="center">
+            <img src="preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg" style="border-radius: 5px;"/>
         </td>
-        <td>
-            <img src="128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="max-width:100%;"/>
-            <img src="palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="max-width:100%;"/>
-        </td>        
-        <td>
-            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">1024</a><br/>
-            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">512</a><br/>
-            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">256</a><br/>
-            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">128</a><br/>
-            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">ZMT</a>
+        <td align="right">
+            <img src="128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" style="border-radius: 5px;"/>
+            <br/>
+            <img src="palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png" style="border-radius: 5px;"/>
+            <br/>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">1024px</a><br/>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">512px</a><br/>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">256px</a><br/>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">128px</a><br/>
+            <a href="/nidorx/matcaps/raw/master/128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png" target="_blank">ZBrush Material (ZMT)</a>
+            <p><strong>2A2A2A_2A2A2A_DBDBDB_6A6A6A</strong></p>
         </td>
-  </tr>
+    </tr>
 </table>
 
 
