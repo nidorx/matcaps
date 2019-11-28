@@ -649,12 +649,15 @@ Promise
                 `        <br/>`,
                 `        <img src="palette/${name}-palette.png"/>`,
                 `        <br/>`,
-                `        <a href="raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
-                `        <a href="raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
-                `        <a href="raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
-                `        <a href="raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
-                `        <a href="raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
-                `        <a href="raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
+                // https://github.com/nidorx/matcaps/raw/master/1024/070B0C_070B0C_B2C7CE_728FA3.png
+                // /nidorx/matcaps/raw/master/preview/070B0C_070B0C_B2C7CE_728FA3-preview.jpg
+                // https://github.com/nidorx/matcaps/blob/master/raw/master/1024/070B0C_070B0C_B2C7CE_728FA3.png
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
+                `        <a href="https://github.com/nidorx/matcaps/raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
                 `        <p><strong>${name}</strong></p>`,
                 `    </td>`,
                 `</tr>`,
