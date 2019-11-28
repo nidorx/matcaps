@@ -448,7 +448,7 @@ File.prototype.savePalettePreview = function () {
                     `"${paletteFile}"`
                 ].join(' '), {stdio: [0, 1, 2]});
 
-                borderRadius(paletteFile, 94);
+                //borderRadius(paletteFile, 94);
 
                 resolve();
             }
@@ -527,7 +527,7 @@ File.prototype.render = function () {
 
                     rimraf.sync(outputdir);
 
-                    borderRadius(rendered, 512);
+                    //borderRadius(rendered, 512);
 
 
                     resolve();
@@ -553,7 +553,7 @@ File.prototype.resize = function () {
     const thumbnail = path.join('thumbnail', path.basename(this.name, '.png') + '.jpg');
     if (!fs.existsSync(thumbnail)) {
         execSync(`magick "${original}" -resize 232x232 -strip "${thumbnail}"`, {stdio: [0, 1, 2]});
-        borderRadius(thumbnail, 232);
+        //borderRadius(thumbnail, 232);
     }
 
     return Promise.resolve();
