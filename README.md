@@ -78,3 +78,5 @@ magick roseSMALL.tif -set colorspace RGB -colorspace sRGB rose2.tif
 </table>
 
 
+
+

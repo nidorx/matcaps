@@ -550,7 +550,7 @@ File.prototype.resize = function () {
     });
 
     // For github list
-    const preview255 = path.join('thumbnail', path.basename(this.name, '.png') +  '.jpg');
+    const preview255 = path.join('thumbnail', path.basename(this.name, '.png') + '.jpg');
     if (!fs.existsSync(preview255)) {
         execSync(`magick "${original}" -resize 255x255 -strip "${preview255}"`, {stdio: [0, 1, 2]});
         borderRadius(preview255, 255);
@@ -591,7 +591,7 @@ Promise
     }))
     .then(value => {
         // Remove orphans
-        const validNames = fs.readdirSync('1024');
+        const allfiles = fs.readdirSync('1024');
         ['64', '128', '256', '512'].forEach(size => {
 
             fs.readdirSync(size)
@@ -599,7 +599,7 @@ Promise
                     return file.replace(/-\d+px.png$/, '');
                 })
                 .filter(file => {
-                    return validNames.indexOf(file + '.png') < 0
+                    return allfiles.indexOf(file + '.png') < 0
                 })
                 .forEach(file => {
                     var fpath = path.join(size, file + '-' + size + 'px.png');
@@ -616,7 +616,7 @@ Promise
                     return file.replace(/-[^.]+.(png|jpg)$/, '');
                 })
                 .filter(file => {
-                    return validNames.indexOf(file + '.png') < 0
+                    return allfiles.indexOf(file + '.png') < 0
                 })
                 .forEach(file => {
                     var fpath = path.join(folder, file + '-' + folder + ext);
@@ -625,22 +625,47 @@ Promise
                     }
                 });
         });
+
+        return allfiles;
     })
-    .then(value => {
+    .then(allfiles => {
         // Gerar documentação
 
         var template = fs.readFileSync('resources/TEMPLATE.md', 'utf8');
 
-        fs.readdirSync('1024')
-            .forEach(file => {
-                var basename = path.basename(file, '.png');
-                template += [
-                    '| ![](128/2A2A2A_2A2A2A_DBDBDB_6A6A6A-128px.png)',
-                    '| ![](palette/2A2A2A_2A2A2A_DBDBDB_6A6A6A-palette.png)',
-                    '| ![](preview/2A2A2A_2A2A2A_DBDBDB_6A6A6A-preview.jpg) |',
-                ].join(' ');
-                return file.replace(/-[^.]+.(png|jpg)$/, '');
-            })
+        var table = [
+            '<table style="width:100%">'
+        ];
+
+        allfiles.forEach(file => {
+            var name = path.basename(file, '.png');
+            table.push([
+                `<tr>`,
+                `    <td align="center">`,
+                `        <img src="preview/${name}-preview.jpg"/>`,
+                `    </td>`,
+                `    <td align="right">`,
+                `        <img src="thumbnail/${name}.jpg"/>`,
+                `        <br/>`,
+                `        <img src="palette/${name}-palette.png"/>`,
+                `        <br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/1024/${name}.png" target="_blank">1024px</a><br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/512/${name}-512px.png" target="_blank">512px</a><br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/256/${name}-256px.png" target="_blank">256px</a><br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/128/${name}-128px.png" target="_blank">128px</a><br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/64/${name}-64px.png" target="_blank">64px</a><br/>`,
+                `        <a href="/nidorx/matcaps/raw/master/zmt/${name}-ZMT.zip" target="_blank">ZBrush Material (ZMT)</a>`,
+                `        <p><strong>${name}</strong></p>`,
+                `    </td>`,
+                `</tr>`,
+            ].join('\n'));
+        });
+
+        table.push('</table>');
+
+        template += table.join('\n');
+
+        fs.writeFileSync('./PAGINA.md', template);
     })
     .then(value => {
         // Criar tile com grupo de previews
