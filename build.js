@@ -657,7 +657,7 @@ Promise
                     fs.existsSync(path.join('zmt', name + '.zmt'))
                         ? `[[ZBrush Material (ZMT)](https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt)]`
                         : '[~~ZBrush Material (ZMT)~~]',
-                    '---'
+                    '\n---'
                 ].join('\n'));
             }
             fs.writeFileSync(`./PAGE-${page}.md`, pageMD.join('\n'));
