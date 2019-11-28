@@ -625,6 +625,17 @@ Promise
         var i = 0;
         for (var page = 1; page <= PAGES; page++) {
             const pageMD = [TPL_PAGE];
+
+            // * [Page 1](PAGE-2.md)
+
+            for (var pagei = 1; pagei <= PAGES; pagei++) {
+                if (pagei === page) {
+                    pageMD.push(`* Page ${pagei}`);
+                } else {
+                    pageMD.push(`* [Page ${pagei}](PAGE-${pagei}.md)`);
+                }
+            }
+
             const pagePreviews = [];
             for (var m = page * PAGE_SIZE; i < m && i < allfiles.length; i++) {
                 var file = allfiles[i];
@@ -633,19 +644,20 @@ Promise
                 pagePreviews.push(`preview/${name}-preview.jpg`);
 
                 pageMD.push([
-                    `## ${name}`,
+                    `### ${name}`,
                     `![](preview/${name}-preview.jpg)`,
                     `![](thumbnail/${name}.jpg)`,
                     `![](palette/${name}-palette.png)`,
                     '',// BR
-                    `[1024px](https://github.com/nidorx/matcaps/raw/master/1024/${name}.png)`,
-                    `[512px](https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png)`,
-                    `[256px](https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png)`,
-                    `[128px](https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png)`,
-                    `[64px](https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png)`,
+                    ':package: ',// BR
+                    `[[1024px](https://github.com/nidorx/matcaps/raw/master/1024/${name}.png)]`,
+                    `[[512px](https://github.com/nidorx/matcaps/raw/master/512/${name}-512px.png)]`,
+                    `[[256px](https://github.com/nidorx/matcaps/raw/master/256/${name}-256px.png)]`,
+                    `[[128px](https://github.com/nidorx/matcaps/raw/master/128/${name}-128px.png)]`,
+                    `[[64px](https://github.com/nidorx/matcaps/raw/master/64/${name}-64px.png)]`,
                     fs.existsSync(path.join('zmt', name + '.zmt'))
-                        ? `[ZBrush Material (ZMT)](https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt)`
-                        : '~~ZBrush Material (ZMT)~~',
+                        ? `[[ZBrush Material (ZMT)](https://github.com/nidorx/matcaps/raw/master/zmt/${name}.zmt)]`
+                        : '[~~ZBrush Material (ZMT)~~]',
                 ].join('\n'));
             }
             fs.writeFileSync(`./PAGE-${page}.md`, pageMD.join('\n'));
