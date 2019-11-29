@@ -617,7 +617,7 @@ Promise
         // Gerar documentação
         const TPL_README = fs.readFileSync('resources/TPL_README.md', 'utf8');
         const TPL_PAGE = fs.readFileSync('resources/TPL_PAGE.md', 'utf8');
-        const PAGE_SIZE = 50;
+        const PAGE_SIZE = 49;
         const PAGES = Math.ceil(allfiles.length / PAGE_SIZE);
 
         const readmeMD = [TPL_README];
@@ -669,7 +669,7 @@ Promise
 
             // Generate page preview
             execSync([
-                `magick montage -tile 10x0 -geometry +1+1 -border 1 -bordercolor black -scale 84x84`,
+                `magick montage -tile 7x0 -geometry +1+1 -border 1 -bordercolor black -crop 250x250+131+0 -scale 122x122`,
                 `"${pagePreviews.join('" "')}"`,
                 `preview/page-${page}.jpg`
             ].join(' '), {stdio: [0, 1, 2]});
