@@ -1,18 +1,14 @@
 <div align="center">
-    <h1>MatCaps</h1>
-    <img src="./resources/repository-open-graph.jpg" width="882" />
-    <p align="center">
-        A huge library of MatCap textures in PNG and ZMT.
-    </p>
+    <img src="./resources/repository-open-graph.jpg" width="882" /> 
 </div>
 
 <br>
 
+A huge library of MatCap textures in PNG and ZMT.
 
 TLDR; Scroll to bottom of page to explore textures
 
 
-  
 ## What is MatCap?
 
 In [3D computer graphics](https://en.wikipedia.org/wiki/3D_computer_graphics), the appearance of an 3D object depends on 
