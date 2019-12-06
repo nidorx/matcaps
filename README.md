@@ -1,14 +1,18 @@
 <div align="center">
-    <img src="./resources/repository-open-graph.jpg" width="882" /> 
+    <h1>MatCaps</h1>
+    <img src="./resources/repository-open-graph.jpg" width="882" />
+    <p align="center">
+        A huge library of MatCap textures in PNG and ZMT.
+    </p>
 </div>
 
 <br>
 
-A huge library of MatCap textures in PNG and ZMT.
 
 TLDR; Scroll to bottom of page to explore textures
 
 
+  
 ## What is MatCap?
 
 In [3D computer graphics](https://en.wikipedia.org/wiki/3D_computer_graphics), the appearance of an 3D object depends on 
@@ -110,3 +114,9 @@ Due to the amount of existing material and the naming standard used here (Filena
 [![](preview/page-4.jpg)](PAGE-4.md)
 ## Page 5
 [![](preview/page-5.jpg)](PAGE-5.md)
+## Page 6
+[![](preview/page-6.jpg)](PAGE-6.md)
+## Page 7
+[![](preview/page-7.jpg)](PAGE-7.md)
+## Page 8
+[![](preview/page-8.jpg)](PAGE-8.md)
