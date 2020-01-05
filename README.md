@@ -18,7 +18,7 @@ TLDR; Scroll to bottom of page to explore textures
 In [3D computer graphics](https://en.wikipedia.org/wiki/3D_computer_graphics), the appearance of an 3D object depends on 
 several things:
 
-- the [surface normals](https://en.wikipedia.org/wiki/Normal_(geometry) (which determine how the object is shaded);
+- the [surface normals](https://en.wikipedia.org/wiki/Normal_(geometry)) (which determine how the object is shaded);
 - the [point from which the object is viewed](https://en.wikipedia.org/wiki/Virtual_camera_system#Fixed);
 - the [lighting setup](https://en.wikipedia.org/wiki/Computer_graphics_lighting) (orientation and types of lights);
 - and [how the surface reacts to that lighting](https://en.wikipedia.org/wiki/Shading) (for example, how shiny it is).
