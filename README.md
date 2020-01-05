@@ -75,7 +75,7 @@ list of some implementations for the most popular tools and frameworks.
     - [Infinite Possibility Of MatCap Shader](http://viclw17.github.io/2016/05/01/MatCap-Shader-Showcase/)
     - [MatCap - Wiki](https://wiki.unity3d.com/index.php/MatCap)
     - [World Space MatCap Shading](https://medium.com/@cyrilltoboe/world-space-matcap-shading-1d8f2a0ee296)
-- [https://www.blender.org/](Blender 3D)
+- [Blender 3D](https://www.blender.org)
     - [Matcap Generator](https://bensimonds.com/2010/07/30/matcap-generator/)
     - [NEW MATCAPS! - Blender 2.8](https://www.blendernation.com/2018/07/31/new-matcaps-blender-2-8/)
 
