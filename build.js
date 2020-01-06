@@ -314,7 +314,6 @@ File.prototype.extractPalette = function () {
             // Gera a paleta a partir da imagem original, e renomeia o arquivo atual
 
             const original = path.join('1024', this.name);
-            let basename = path.basename(this.name, '.png');
             const circular = path.join('.tmp', path.basename(original, '.png') + '.png');
 
             var colorA = {};
@@ -333,14 +332,13 @@ File.prototype.extractPalette = function () {
                 })
                 .then(rgb => {
 
-
                     // Get name from palette
                     // Ex. C65646_B36458_EC8C83_841D14
                     var name = [
                         colorA,
-                        `${rgb[0].map(rgbToHex).join('')}`,
                         `${rgb[1].map(rgbToHex).join('')}`,
                         `${rgb[2].map(rgbToHex).join('')}`,
+                        `${rgb[3].map(rgbToHex).join('')}`,
                     ].join('_').replace(/[#]/g, '').toUpperCase();
 
 
@@ -412,20 +410,15 @@ File.prototype.savePalettePreview = function () {
                     return resolve();
                 }
 
-                const colors = {
-                    A: this.palette.A,
-                    B: this.palette.C,
-                    C: this.palette.E,
-                    D: this.palette.D
-                };
+                const colors = this.palette;
 
                 // magick convert -size 140x140 xc:"rgb(255, 0, 0)" -fill White  -draw "rectangle 5,5 10,10" square.png
 
                 execSync([
                     `magick convert -size 94x94`,
                     `xc:"#${colors.D}"`,
-                    `-fill "#${colors.B}" -draw "rectangle 62, 0, 94, 47"`,
                     `-fill "#${colors.C}" -draw "rectangle 0, 62, 47, 94"`,
+                    `-fill "#${colors.B}" -draw "rectangle 62, 0, 94, 47"`,
                     `-fill "#${colors.A}" -draw "rectangle 0, 0, 62, 62"`,
                     `"${paletteFile}"`
                 ].join(' '), {stdio: [0, 1, 2]});
