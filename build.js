@@ -446,7 +446,7 @@ File.prototype.render = function () {
     return limitRender(() => {
             return new Promise((resolve, reject) => {
                 let basename = path.basename(this.name, '.png');
-                const rendered = path.join('preview', basename + '-preview.jpg');
+                const rendered = path.join('preview', basename + '-preview.png');
                 if (fs.existsSync(rendered)) {
                     return resolve();
                 }
@@ -459,7 +459,7 @@ File.prototype.render = function () {
                     '-o',
                     `//${outputdir}/`,
                     '-P', 'scene-texture.py',
-                    '-F', 'JPEG',
+                    '-F', 'PNG',
                     '-a',
                     '-s', '1',
                     '-e', '1',
@@ -505,12 +505,13 @@ File.prototype.render = function () {
                         return reject(`Blender process exited with code ${code}`);
                     }
 
-                    fs.renameSync(path.join(outputdir, '0001.jpg'), rendered);
+                    execSync([
+                        `magick "${path.join(outputdir, '0001.png')}"  -profile ./sRGB2014.icc -colorspace RGB `,
+                        `-strip "PNG24:${rendered}"`,
+                    ].join(' '), {stdio: [0, 1, 2]});
+                    // fs.renameSync(path.join(outputdir, '0001.png'), rendered);
 
                     rimraf.sync(outputdir);
-
-                    //borderRadius(rendered, 512);
-
 
                     resolve();
                 });
@@ -535,7 +536,6 @@ File.prototype.resize = function () {
     const thumbnail = path.join('thumbnail', path.basename(this.name, '.png') + '.jpg');
     if (!fs.existsSync(thumbnail)) {
         execSync(`magick "${original}" -resize 232x232 -strip "${thumbnail}"`, {stdio: [0, 1, 2]});
-        //borderRadius(thumbnail, 232);
     }
 
     return Promise.resolve();
@@ -617,7 +617,13 @@ Promise
         // Gerar documentação
         const TPL_README = fs.readFileSync('resources/TPL_README.md', 'utf8');
         const TPL_PAGE = fs.readFileSync('resources/TPL_PAGE.md', 'utf8');
-        const PAGE_SIZE = 49;
+        const COLS = 4;
+        const ROWS = 5;
+        const PAGE_SIZE = COLS * ROWS;
+        const IDEAL_SIZE = 882;
+        const THUMB = Math.round(IDEAL_SIZE / COLS) - 4; //2 border + 2 spaces
+        const CROP = 250;
+        const CROP_L = (512 / 2) - (CROP / 2);
         const PAGES = Math.ceil(allfiles.length / PAGE_SIZE);
 
         const readmeMD = [TPL_README];
@@ -638,18 +644,18 @@ Promise
                     pageMD.push(`* [Page ${pagei}](PAGE-${pagei}.md)`);
                 }
             }
-            pageMD.push(`## Page ${pagei} Matcaps`);
+            pageMD.push(`## Page ${page} Matcaps`);
 
             const pagePreviews = [];
             for (var m = page * PAGE_SIZE; i < m && i < allfiles.length; i++) {
                 var file = allfiles[i];
                 var name = path.basename(file, '.png');
 
-                pagePreviews.push(`preview/${name}-preview.jpg`);
+                pagePreviews.push(`preview/${name}-preview.png`);
 
                 pageMD.push([
                     `### ${name}`,
-                    `![](preview/${name}-preview.jpg)`,
+                    `![](preview/${name}-preview.png)`,
                     `![](thumbnail/${name}.jpg)`,
                     `![](palette/${name}-palette.png)`,
                     '',// BR
@@ -669,9 +675,9 @@ Promise
 
             // Generate page preview
             execSync([
-                `magick montage -tile 7x0 -geometry +1+1 -border 1 -bordercolor black -crop 250x250+131+0 -scale 122x122`,
+                `magick montage -tile ${COLS}x0 -geometry +1+1 -border 1 -bordercolor black -crop ${CROP}x${CROP}+${CROP_L}+0 -scale ${THUMB}x${THUMB}`,
                 `"${pagePreviews.join('" "')}"`,
-                `preview/page-${page}.jpg`
+                `"preview/page-${page}.jpg"`
             ].join(' '), {stdio: [0, 1, 2]});
 
             readmeMD.push([
