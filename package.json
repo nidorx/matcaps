@@ -19,7 +19,7 @@
     "color-sorter": "^4.0.0",
     "colorthief": "2.3.0",
     "image-size": "0.8.3",
-    "jszip": "3.2.2",
+    "jszip": "3.8.0",
     "p-limit": "2.2.1",
     "rimraf": "3.0.0"
   }
