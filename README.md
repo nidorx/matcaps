@@ -11,7 +11,7 @@
 
 <br>
 
-TLDR; Scroll to bottom of page to explore textures, or access the dynamic gallery created by [Lionel Radisson](https://github.com/MAKIO135) at https://observablehq.com/@makio135/matcaps?ui=classic
+TLDR; Scroll to bottom of page to explore textures, or access the dynamic gallery created by [Lionel Radisson](https://github.com/MAKIO135) at https://observablehq.com/d/2c53c7ee9f619740?ui=classic
 
 
   
