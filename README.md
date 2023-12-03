@@ -5,7 +5,7 @@
         A huge library of MatCap textures in PNG and ZMT.
     </p>
     <p align="center">
-       Dynamic Gallery View at https://observablehq.com/@makio135/matcaps?ui=classic
+       Dynamic Gallery View at https://observablehq.com/d/2c53c7ee9f619740?ui=classic
     </p>
 </div>
 
